@@ -1,0 +1,51 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can read/write their own user document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && 
+        resource.data.contacts != null && 
+        request.auth.uid in resource.data.contacts;
+    }
+    
+    // Chat rules - participants can read/write
+    match /chats/{chatId} {
+      allow read, write: if request.auth != null && 
+        request.auth.uid in resource.data.participants;
+      
+      // Messages within chats
+      match /messages/{messageId} {
+        allow read, write: if request.auth != null && 
+          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+      }
+    }
+    
+    // Posts - author can write, contacts can read
+    match /posts/{postId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == resource.data.authorId;
+      
+      // Reactions within posts
+      match /reactions/{reactionId} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null && request.auth.uid == resource.data.userId;
+      }
+      
+      // Comments within posts
+      match /comments/{commentId} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null && request.auth.uid == resource.data.authorId;
+      }
+    }
+    
+    // Statuses - author can write, contacts can read
+    match /statuses/{statusId} {
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.authorId ||
+         request.auth.uid in get(/databases/$(database)/documents/users/$(resource.data.authorId)).data.contacts);
+      allow write: if request.auth != null && request.auth.uid == resource.data.authorId;
+    }
+  }
+}
