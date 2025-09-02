@@ -10,7 +10,7 @@ import {
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '../config/firebase';
 import useAuthStore from '../stores/authStore';
-import { Search, UserPlus, Check, X, Phone } from 'lucide-react';
+import { Search, UserPlus, Check, X, Phone, Users } from 'lucide-react';
 
 const ContactsPage = () => {
   const { userData, updateUserData } = useAuthStore();
