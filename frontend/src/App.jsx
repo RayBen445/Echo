@@ -7,6 +7,9 @@ import Layout from './components/layout/Layout';
 import DashboardPage from './pages/DashboardPage';
 import ContactsPage from './pages/ContactsPage';
 import StatusFeedPage from './pages/StatusFeedPage';
+import ProfilePage from './pages/ProfilePage';
+import SettingsPage from './pages/SettingsPage';
+import NotificationsPage from './pages/NotificationsPage';
 
 // Loading component
 const LoadingScreen = () => (
@@ -86,15 +89,14 @@ function App() {
             {/* Status feed */}
             <Route path="status" element={<StatusFeedPage />} />
             
-            {/* Profile page (placeholder) */}
-            <Route path="profile" element={
-              <div className="flex-1 bg-white flex items-center justify-center">
-                <div className="text-center">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Profile Page</h2>
-                  <p className="text-gray-600">Coming soon...</p>
-                </div>
-              </div>
-            } />
+            {/* Profile page */}
+            <Route path="profile" element={<ProfilePage />} />
+            
+            {/* Settings page */}
+            <Route path="settings" element={<SettingsPage />} />
+            
+            {/* Notifications page */}
+            <Route path="notifications" element={<NotificationsPage />} />
           </Route>
           
           {/* Catch all route */}
