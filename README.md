@@ -121,7 +121,9 @@ VITE_FIREBASE_APP_ID=1:123456789:web:abcdef123456789
 VITE_FIREBASE_VAPID_KEY=your-vapid-key
 ```
 
-### 4. Firebase Deployment
+### 4. Deployment Options
+
+#### Option A: Firebase Deployment (Recommended)
 ```bash
 # Login to Firebase
 firebase login
@@ -136,6 +138,36 @@ firebase deploy
 npm run build  # in frontend/
 firebase deploy --only hosting
 ```
+
+#### Option B: Vercel Deployment (Frontend + Firebase Backend)
+```bash
+# Install Vercel CLI
+npm install -g vercel
+
+# Deploy to Vercel (interactive)
+vercel
+
+# Or deploy directly
+vercel --prod
+```
+
+**Note**: With Vercel deployment:
+- Frontend is hosted on Vercel
+- Firebase services (Functions, Firestore, Storage, Auth) remain on Firebase
+- You still need to deploy Firebase backend services separately:
+  ```bash
+  firebase deploy --only functions,firestore,storage
+  ```
+
+#### Environment Variables for Vercel
+In your Vercel dashboard, add these environment variables:
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_STORAGE_BUCKET`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
+- `VITE_FIREBASE_APP_ID`
+- `VITE_FIREBASE_VAPID_KEY`
 
 ### 5. Development
 ```bash

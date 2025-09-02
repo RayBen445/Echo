@@ -1,0 +1,29 @@
+{
+  "name": "echo-social-messenger",
+  "version": "2.0.0",
+  "description": "Echo Firebase-powered social messenger platform",
+  "private": true,
+  "scripts": {
+    "build": "cd frontend && npm run build",
+    "dev": "cd frontend && npm run dev",
+    "install-frontend": "cd frontend && npm install",
+    "install-functions": "cd functions && npm install",
+    "firebase-deploy": "firebase deploy",
+    "firebase-serve": "firebase serve"
+  },
+  "keywords": [
+    "social-messenger",
+    "firebase",
+    "react",
+    "real-time-chat",
+    "whatsapp-clone",
+    "facebook-features"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "workspaces": [
+    "frontend",
+    "functions"
+  ]
+}
