@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import useAuthStore from './stores/authStore';
 import useChatStore from './stores/chatStore';
-import PhoneAuth from './components/auth/PhoneAuth';
+import DualAuth from './components/auth/PhoneAuth';
 import Layout from './components/layout/Layout';
 import DashboardPage from './pages/DashboardPage';
 import ContactsPage from './pages/ContactsPage';
@@ -10,6 +10,7 @@ import StatusFeedPage from './pages/StatusFeedPage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import NotificationsPage from './pages/NotificationsPage';
+import AdminPage from './pages/AdminPage';
 
 // Loading component
 const LoadingScreen = () => (
@@ -66,7 +67,7 @@ function App() {
             path="/auth" 
             element={
               <PublicRoute>
-                <PhoneAuth />
+                <DualAuth />
               </PublicRoute>
             } 
           />
@@ -97,6 +98,9 @@ function App() {
             
             {/* Notifications page */}
             <Route path="notifications" element={<NotificationsPage />} />
+            
+            {/* Admin panel */}
+            <Route path="admin" element={<AdminPage />} />
           </Route>
           
           {/* Catch all route */}

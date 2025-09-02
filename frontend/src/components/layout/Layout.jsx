@@ -7,7 +7,8 @@ import {
   User, 
   LogOut, 
   Settings,
-  Bell
+  Bell,
+  Shield
 } from 'lucide-react';
 import useAuthStore from '../../stores/authStore';
 
@@ -23,6 +24,9 @@ const Layout = () => {
       console.error('Error signing out:', error);
     }
   };
+
+  // Check if user is admin
+  const isAdmin = userData?.role === 'admin' || userData?.email === 'admin@echo.com';
 
   const navItems = [
     { path: '/', icon: MessageCircle, label: 'Chats' },
@@ -119,6 +123,24 @@ const Layout = () => {
               <Settings className="w-5 h-5" />
               <span>Settings</span>
             </NavLink>
+            
+            {/* Admin Panel Link - Only show for admin users */}
+            {isAdmin && (
+              <NavLink
+                to="/admin"
+                className={({ isActive }) =>
+                  `flex items-center space-x-3 px-4 py-2 rounded-lg w-full text-left transition-colors ${
+                    isActive
+                      ? 'bg-red-50 text-red-600'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`
+                }
+              >
+                <Shield className="w-5 h-5" />
+                <span>Admin Panel</span>
+              </NavLink>
+            )}
+            
             <button 
               onClick={handleSignOut}
               className="flex items-center space-x-3 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg w-full text-left transition-colors"
