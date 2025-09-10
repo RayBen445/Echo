@@ -21,6 +21,7 @@ const useChatStore = create((set, get) => ({
   messages: {},
   typingUsers: {},
   isLoading: false,
+  error: null,
   
   // Unsubscribe functions
   unsubscribeChats: null,
@@ -36,29 +37,56 @@ const useChatStore = create((set, get) => ({
       unsubscribeChats();
     }
 
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
 
-    // Subscribe to user's chats
-    const chatsQuery = query(
-      collection(db, 'chats'),
-      where('participants', 'array-contains', userId),
-      orderBy('createdAt', 'desc')
-    );
+    try {
+      // Subscribe to user's chats
+      const chatsQuery = query(
+        collection(db, 'chats'),
+        where('participants', 'array-contains', userId),
+        orderBy('createdAt', 'desc')
+      );
 
-    const unsubscribe = onSnapshot(chatsQuery, (snapshot) => {
-      const chats = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      
-      set({ 
-        chats,
-        isLoading: false,
-        unsubscribeChats: unsubscribe
+      const unsubscribe = onSnapshot(chatsQuery, (snapshot) => {
+        const chats = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        set({ 
+          chats,
+          isLoading: false,
+          error: null,
+          unsubscribeChats: unsubscribe
+        });
+      }, (error) => {
+        console.error('Error loading chats:', error);
+        
+        let errorMessage = 'Failed to load chats';
+        switch (error.code) {
+          case 'permission-denied':
+          case 'firestore/permission-denied':
+            errorMessage = 'Permission denied accessing chats';
+            break;
+          case 'auth/insufficient-permission':
+            errorMessage = 'Insufficient permissions to access chats';
+            break;
+        }
+        
+        set({ 
+          isLoading: false,
+          error: errorMessage
+        });
       });
-    });
 
-    set({ unsubscribeChats: unsubscribe });
+      set({ unsubscribeChats: unsubscribe });
+    } catch (error) {
+      console.error('Error setting up chat listener:', error);
+      set({ 
+        isLoading: false,
+        error: 'Failed to load chats'
+      });
+    }
   },
 
   setActiveChat: (chatId) => {
@@ -141,7 +169,23 @@ const useChatStore = create((set, get) => ({
       });
     } catch (error) {
       console.error('Error sending message:', error);
-      throw error;
+      
+      let errorMessage = 'Failed to send message';
+      switch (error.code) {
+        case 'permission-denied':
+        case 'firestore/permission-denied':
+          errorMessage = 'Permission denied sending message';
+          break;
+        case 'auth/insufficient-permission':
+          errorMessage = 'Insufficient permissions to send message';
+          break;
+        case 'firestore/not-found':
+          errorMessage = 'Chat not found';
+          break;
+      }
+      
+      set({ error: errorMessage });
+      throw new Error(errorMessage);
     }
   },
 
@@ -158,9 +202,27 @@ const useChatStore = create((set, get) => ({
       return result.data;
     } catch (error) {
       console.error('Error creating chat:', error);
-      throw error;
+      
+      let errorMessage = 'Failed to create chat';
+      switch (error.code) {
+        case 'permission-denied':
+        case 'functions/permission-denied':
+          errorMessage = 'Permission denied creating chat';
+          break;
+        case 'auth/insufficient-permission':
+          errorMessage = 'Insufficient permissions to create chat';
+          break;
+        case 'functions/unauthenticated':
+          errorMessage = 'Authentication required to create chat';
+          break;
+      }
+      
+      set({ error: errorMessage });
+      throw new Error(errorMessage);
     }
   },
+
+  clearError: () => set({ error: null }),
 
   updateTypingStatus: async (chatId, isTyping) => {
     try {
