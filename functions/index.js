@@ -270,3 +270,94 @@ exports.cleanupTypingIndicators = onCall(async (request) => {
     throw new HttpsError('internal', 'Failed to cleanup typing indicators');
   }
 });
+
+// Create or update user profile (called after Firebase Auth sign-up)
+exports.createUserProfile = onCall(async (request) => {
+  const { displayName, phoneNumber, email } = request.data;
+  const userId = request.auth.uid;
+  
+  if (!userId) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+  
+  try {
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+    
+    if (!userDoc.exists) {
+      // Create new user profile
+      await userRef.set({
+        uid: userId,
+        displayName: displayName || 'Unknown User',
+        phoneNumber: phoneNumber || null,
+        email: email || null,
+        profilePictureUrl: null,
+        contacts: [],
+        pendingRequests: [],
+        deviceTokens: [],
+        isOnline: true,
+        lastSeen: admin.firestore.Timestamp.now(),
+        createdAt: admin.firestore.Timestamp.now(),
+        updatedAt: admin.firestore.Timestamp.now()
+      });
+    } else {
+      // Update existing profile
+      await userRef.update({
+        displayName: displayName || userDoc.data().displayName,
+        phoneNumber: phoneNumber || userDoc.data().phoneNumber,
+        email: email || userDoc.data().email,
+        updatedAt: admin.firestore.Timestamp.now()
+      });
+    }
+    
+    const updatedDoc = await userRef.get();
+    return { success: true, user: updatedDoc.data() };
+  } catch (error) {
+    console.error('Error creating/updating user profile:', error);
+    throw new HttpsError('internal', 'Failed to create/update user profile');
+  }
+});
+
+// Update user online status
+exports.updateUserStatus = onCall(async (request) => {
+  const { isOnline, deviceToken } = request.data;
+  const userId = request.auth.uid;
+  
+  if (!userId) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+  
+  try {
+    const userRef = db.collection('users').doc(userId);
+    const updateData = {
+      isOnline: isOnline,
+      lastSeen: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now()
+    };
+    
+    // Add or remove device token
+    if (deviceToken) {
+      if (isOnline) {
+        updateData.deviceTokens = admin.firestore.FieldValue.arrayUnion(deviceToken);
+      } else {
+        updateData.deviceTokens = admin.firestore.FieldValue.arrayRemove(deviceToken);
+      }
+    }
+    
+    await userRef.update(updateData);
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating user status:', error);
+    throw new HttpsError('internal', 'Failed to update user status');
+  }
+});
+
+// Health check endpoint
+exports.healthCheck = onCall(async (request) => {
+  return { 
+    status: 'ok', 
+    timestamp: admin.firestore.Timestamp.now(),
+    message: 'Firebase functions are running'
+  };
+});

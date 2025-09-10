@@ -89,13 +89,8 @@ frontend/
 git clone https://github.com/RayBen445/Echo.git
 cd Echo
 
-# Install frontend dependencies
-cd frontend
-npm install
-
-# Install Cloud Functions dependencies  
-cd ../functions
-npm install
+# Install all dependencies (root, frontend, and functions)
+npm run install-all
 ```
 
 ### 2. Firebase Configuration
@@ -107,11 +102,10 @@ npm install
 
 ### 3. Environment Setup
 ```bash
-# Frontend environment
-cd frontend
-cp .env.example .env
+# Copy example environment file
+cp frontend/.env.example frontend/.env.local
 
-# Edit .env with your Firebase config:
+# Edit frontend/.env.local with your Firebase config:
 VITE_FIREBASE_API_KEY=your-api-key
 VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=your-project-id
@@ -121,34 +115,36 @@ VITE_FIREBASE_APP_ID=1:123456789:web:abcdef123456789
 VITE_FIREBASE_VAPID_KEY=your-vapid-key
 ```
 
-### 4. Deployment Options
-
-#### Option A: Firebase Deployment (Recommended)
+### 4. Development
 ```bash
-# Login to Firebase
-firebase login
+# Start frontend development server
+npm run dev
 
-# Initialize project (if not done)
-firebase init
-
-# Deploy Firestore rules, storage rules, and functions
-firebase deploy
-
-# Deploy hosting (for frontend)
-npm run build  # in frontend/
-firebase deploy --only hosting
+# Optional: Start Firebase emulators for local development
+npm run firebase-emulators
 ```
 
-#### Option B: Vercel Deployment (Frontend + Firebase Backend)
+### 5. Unified Deployment Options
+
+#### Option A: Firebase Hosting (Recommended - Full Integration)
 ```bash
-# Install Vercel CLI
-npm install -g vercel
+# Deploy everything to Firebase (frontend + backend + database + functions)
+npm run firebase-deploy
+```
 
-# Deploy to Vercel (interactive)
-vercel
+#### Option B: Vercel + Firebase Functions (Hybrid Deployment)
+```bash
+# Deploy Firebase functions first
+npm run functions-deploy
 
-# Or deploy directly
+# Then deploy frontend to Vercel
 vercel --prod
+```
+
+### 6. Testing Deployment
+```bash
+# Run deployment validation test
+./test-deployment.sh
 ```
 
 **Note**: With Vercel deployment:

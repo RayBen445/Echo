@@ -6,10 +6,12 @@
   "scripts": {
     "build": "cd frontend && npm run build",
     "dev": "cd frontend && npm run dev",
-    "install-frontend": "cd frontend && npm install",
-    "install-functions": "cd functions && npm install",
-    "firebase-deploy": "firebase deploy",
-    "firebase-serve": "firebase serve"
+    "install-all": "npm install && cd frontend && npm install && cd ../functions && npm install",
+    "firebase-deploy": "npm run build && firebase deploy",
+    "firebase-serve": "firebase serve",
+    "firebase-emulators": "firebase emulators:start",
+    "functions-deploy": "firebase deploy --only functions",
+    "hosting-deploy": "npm run build && firebase deploy --only hosting"
   },
   "keywords": [
     "social-messenger",

@@ -1,6 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { io } from 'socket.io-client';
+import { 
+  collection, 
+  addDoc, 
+  query, 
+  orderBy, 
+  limit,
+  onSnapshot,
+  serverTimestamp,
+  where,
+  getDocs
+} from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -8,13 +20,13 @@ import Input from '../components/Input';
 const ChatPage = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [connected, setConnected] = useState(false);
-  const [onlineUsers, setOnlineUsers] = useState([]);
+  const [chats, setChats] = useState([]);
+  const [activeChat, setActiveChat] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [onlineUsers, setOnlineUsers] = useState([]);
   
-  const socket = useRef(null);
   const messagesEndRef = useRef(null);
-  const { user, token, logout } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   // Scroll to bottom of messages
@@ -27,77 +39,244 @@ const ChatPage = () => {
   }, [messages]);
 
   useEffect(() => {
-    if (!token || !user) {
+    if (!isAuthenticated()) {
       navigate('/login');
       return;
     }
 
-    // Initialize Socket.IO connection
-    socket.current = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000', {
-      transports: ['websocket', 'polling'],
+    loadUserChats();
+  }, [user, isAuthenticated, navigate]);
+
+  // Load user's chats
+  const loadUserChats = async () => {
+    if (!user?.uid) return;
+
+    try {
+      const chatsQuery = query(
+        collection(db, 'chats'),
+        where('participants', 'array-contains', user.uid),
+        orderBy('updatedAt', 'desc')
+      );
+
+      const unsubscribe = onSnapshot(chatsQuery, (snapshot) => {
+        const userChats = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setChats(userChats);
+        
+        // Auto-select first chat if none selected
+        if (userChats.length > 0 && !activeChat) {
+          setActiveChat(userChats[0]);
+        }
+      });
+
+      return () => unsubscribe();
+    } catch (error) {
+      console.error('Error loading chats:', error);
+    }
+  };
+
+  // Load messages for active chat
+  useEffect(() => {
+    if (!activeChat) return;
+
+    const messagesQuery = query(
+      collection(db, 'chats', activeChat.id, 'messages'),
+      orderBy('timestamp', 'asc'),
+      limit(50)
+    );
+
+    const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+      const chatMessages = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        timestamp: doc.data().timestamp?.toDate() || new Date()
+      }));
+      setMessages(chatMessages);
     });
 
-    // Connection event handlers
-    socket.current.on('connect', () => {
-      console.log('Connected to server');
-      setConnected(true);
-      // Join with authentication token
-      socket.current.emit('join', token);
-      // Request recent messages
-      socket.current.emit('getRecentMessages');
-    });
+    return () => unsubscribe();
+  }, [activeChat]);
 
-    socket.current.on('disconnect', () => {
-      console.log('Disconnected from server');
-      setConnected(false);
-    });
+  // Send a message
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    
+    if (!newMessage.trim() || !activeChat || !user) return;
 
-    // Message event handlers
-    socket.current.on('receiveMessage', (messageData) => {
-      setMessages(prev => [...prev, messageData]);
-    });
+    setLoading(true);
+    try {
+      await addDoc(collection(db, 'chats', activeChat.id, 'messages'), {
+        content: newMessage.trim(),
+        senderId: user.uid,
+        senderName: user.displayName || user.phoneNumber || 'Unknown User',
+        timestamp: serverTimestamp(),
+        type: 'text'
+      });
 
-    socket.current.on('recentMessages', (recentMessages) => {
-      setMessages(recentMessages);
-    });
+      setNewMessage('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // Handle error - could show toast notification
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    // User event handlers
-    socket.current.on('userJoined', (data) => {
-      const systemMessage = {
-        id: Date.now() + Math.random(),
-        author: 'System',
-        content: data.message,
-        timestamp: new Date(),
-        isSystem: true
-      };
-      setMessages(prev => [...prev, systemMessage]);
-    });
+  // Create a new chat (demo function - you might want a proper UI for this)
+  const createDemoChat = async () => {
+    if (!user?.uid) return;
 
-    socket.current.on('userLeft', (data) => {
-      const systemMessage = {
-        id: Date.now() + Math.random(),
-        author: 'System',
-        content: data.message,
-        timestamp: new Date(),
-        isSystem: true
-      };
-      setMessages(prev => [...prev, systemMessage]);
-    });
+    try {
+      const createChat = httpsCallable(functions, 'createChat');
+      const result = await createChat({
+        participants: [user.uid],
+        chatName: 'General Chat',
+        isGroupChat: false,
+        type: 'public'
+      });
+      
+      console.log('Chat created:', result.data);
+    } catch (error) {
+      console.error('Error creating chat:', error);
+    }
+  };
 
-    // Error handling
-    socket.current.on('error', (error) => {
-      console.error('Socket error:', error);
-      if (error.message === 'Invalid token') {
-        logout();
-        navigate('/login');
-      }
-    });
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
-    // Cleanup on unmount
-    return () => {
-      if (socket.current) {
-        socket.current.disconnect();
-      }
+  return (
+    <div className="flex h-screen bg-gray-100">
+      {/* Sidebar */}
+      <div className="w-1/4 bg-white border-r border-gray-300 flex flex-col">
+        <div className="p-4 bg-blue-600 text-white">
+          <div className="flex justify-between items-center">
+            <h1 className="text-xl font-semibold">Echo Chat</h1>
+            <button
+              onClick={handleLogout}
+              className="text-sm bg-blue-500 hover:bg-blue-700 px-3 py-1 rounded"
+            >
+              Logout
+            </button>
+          </div>
+          <p className="text-sm opacity-75 mt-1">
+            {user?.displayName || user?.phoneNumber || 'User'}
+          </p>
+        </div>
+
+        {/* Chats list */}
+        <div className="flex-1 overflow-y-auto">
+          {chats.length === 0 ? (
+            <div className="p-4 text-center">
+              <p className="text-gray-500 mb-4">No chats available</p>
+              <Button onClick={createDemoChat} size="sm">
+                Create Demo Chat
+              </Button>
+            </div>
+          ) : (
+            chats.map((chat) => (
+              <div
+                key={chat.id}
+                onClick={() => setActiveChat(chat)}
+                className={`p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 ${
+                  activeChat?.id === chat.id ? 'bg-blue-50 border-blue-200' : ''
+                }`}
+              >
+                <h3 className="font-medium">
+                  {chat.chatName || 'Unnamed Chat'}
+                </h3>
+                <p className="text-sm text-gray-500 truncate">
+                  {chat.latestMessage?.content || 'No messages yet'}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Chat area */}
+      <div className="flex-1 flex flex-col">
+        {activeChat ? (
+          <>
+            {/* Chat header */}
+            <div className="p-4 bg-white border-b border-gray-300">
+              <h2 className="text-lg font-semibold">
+                {activeChat.chatName || 'Chat'}
+              </h2>
+              <p className="text-sm text-gray-500">
+                {activeChat.participants?.length || 0} participants
+              </p>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${
+                    message.senderId === user?.uid ? 'justify-end' : 'justify-start'
+                  }`}
+                >
+                  <div
+                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                      message.senderId === user?.uid
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-800'
+                    }`}
+                  >
+                    {message.senderId !== user?.uid && (
+                      <p className="text-xs opacity-75 mb-1">
+                        {message.senderName}
+                      </p>
+                    )}
+                    <p>{message.content}</p>
+                    <p className="text-xs opacity-75 mt-1">
+                      {message.timestamp instanceof Date
+                        ? message.timestamp.toLocaleTimeString()
+                        : 'Now'}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Message input */}
+            <div className="p-4 bg-white border-t border-gray-300">
+              <form onSubmit={sendMessage} className="flex space-x-2">
+                <Input
+                  type="text"
+                  placeholder="Type your message..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  className="flex-1"
+                  disabled={loading}
+                />
+                <Button type="submit" disabled={loading || !newMessage.trim()}>
+                  {loading ? 'Sending...' : 'Send'}
+                </Button>
+              </form>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Welcome to Echo Chat
+              </h3>
+              <p className="text-gray-500">
+                Select a chat to start messaging
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
     };
   }, [token, user, navigate, logout]);
 

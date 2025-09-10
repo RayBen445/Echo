@@ -18,8 +18,22 @@
       "dest": "/index.html"
     }
   ],
-  "buildCommand": "cd frontend && npm run build",
+  "buildCommand": "npm run build",
   "outputDirectory": "frontend/dist",
-  "installCommand": "cd frontend && npm install",
-  "framework": "vite"
+  "installCommand": "npm run install-all",
+  "framework": "vite",
+  "functions": {
+    "functions/index.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "env": {
+    "VITE_FIREBASE_API_KEY": "@firebase_api_key",
+    "VITE_FIREBASE_AUTH_DOMAIN": "@firebase_auth_domain", 
+    "VITE_FIREBASE_PROJECT_ID": "@firebase_project_id",
+    "VITE_FIREBASE_STORAGE_BUCKET": "@firebase_storage_bucket",
+    "VITE_FIREBASE_MESSAGING_SENDER_ID": "@firebase_messaging_sender_id",
+    "VITE_FIREBASE_APP_ID": "@firebase_app_id",
+    "VITE_FIREBASE_VAPID_KEY": "@firebase_vapid_key"
+  }
 }
