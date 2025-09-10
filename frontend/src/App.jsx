@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import useAuthStore from './stores/authStore';
-import useChatStore from './stores/mockChatStore';
+import useChatStore from './stores/chatStore';
 import DualAuth from './components/auth/PhoneAuth';
 import Layout from './components/layout/Layout';
+import ErrorNotification from './components/common/ErrorNotification';
 import DashboardPage from './pages/DashboardPage';
 import ContactsPage from './pages/ContactsPage';
 import StatusFeedPage from './pages/StatusFeedPage';
@@ -24,10 +25,33 @@ const LoadingScreen = () => (
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }) => {
-  const { user, isLoading, isInitialized } = useAuthStore();
+  const { user, isLoading, isInitialized, error } = useAuthStore();
   
   if (!isInitialized || isLoading) {
     return <LoadingScreen />;
+  }
+
+  // Show error screen if there's an auth error
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-8 text-center">
+          <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.862-.833-2.632 0L4.182 15.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Authentication Error</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.href = '/auth'}
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+          >
+            Sign In Again
+          </button>
+        </div>
+      </div>
+    );
   }
   
   return user ? children : <Navigate to="/auth" replace />;
@@ -45,8 +69,8 @@ const PublicRoute = ({ children }) => {
 };
 
 function App() {
-  const { initialize } = useAuthStore();
-  const { cleanup } = useChatStore();
+  const { initialize, error, clearError } = useAuthStore();
+  const { cleanup, error: chatError, clearError: clearChatError } = useChatStore();
 
   useEffect(() => {
     // Initialize authentication
@@ -61,6 +85,16 @@ function App() {
   return (
     <Router>
       <div className="App">
+        {/* Global error notifications */}
+        <ErrorNotification 
+          error={error} 
+          onClose={clearError}
+        />
+        <ErrorNotification 
+          error={chatError} 
+          onClose={clearChatError}
+        />
+        
         <Routes>
           {/* Authentication route */}
           <Route 

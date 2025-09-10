@@ -8,27 +8,33 @@ service firebase.storage {
       allow write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Chat media
+    // Chat media - check if user is participant in the chat
     match /chat-media/{chatId}/{fileName} {
       allow read: if request.auth != null && 
+        exists(/databases/(default)/documents/chats/$(chatId)) &&
         request.auth.uid in firestore.get(/databases/(default)/documents/chats/$(chatId)).data.participants;
       allow write: if request.auth != null && 
+        exists(/databases/(default)/documents/chats/$(chatId)) &&
         request.auth.uid in firestore.get(/databases/(default)/documents/chats/$(chatId)).data.participants;
     }
     
-    // Post media
+    // Post media - check if user is the post author
     match /post-media/{postId}/{fileName} {
       allow read: if request.auth != null;
       allow write: if request.auth != null && 
+        exists(/databases/(default)/documents/posts/$(postId)) &&
         request.auth.uid == firestore.get(/databases/(default)/documents/posts/$(postId)).data.authorId;
     }
     
-    // Status media
+    // Status media - check if user is the status author or in their contacts
     match /status-media/{statusId}/{fileName} {
       allow read: if request.auth != null && 
+        exists(/databases/(default)/documents/statuses/$(statusId)) &&
         (request.auth.uid == firestore.get(/databases/(default)/documents/statuses/$(statusId)).data.authorId ||
-         request.auth.uid in firestore.get(/databases/(default)/documents/users/$(firestore.get(/databases/(default)/documents/statuses/$(statusId)).data.authorId)).data.contacts);
+         (exists(/databases/(default)/documents/users/$(firestore.get(/databases/(default)/documents/statuses/$(statusId)).data.authorId)) &&
+          request.auth.uid in firestore.get(/databases/(default)/documents/users/$(firestore.get(/databases/(default)/documents/statuses/$(statusId)).data.authorId)).data.contacts));
       allow write: if request.auth != null && 
+        exists(/databases/(default)/documents/statuses/$(statusId)) &&
         request.auth.uid == firestore.get(/databases/(default)/documents/statuses/$(statusId)).data.authorId;
     }
   }

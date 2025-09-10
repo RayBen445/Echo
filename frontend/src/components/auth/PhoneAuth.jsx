@@ -98,8 +98,24 @@ const DualAuth = () => {
         case 'auth/invalid-email':
           errorMessage = 'Please enter a valid email address.';
           break;
+        case 'auth/user-disabled':
+          errorMessage = 'Your account has been disabled. Please contact support.';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Too many failed attempts. Please wait and try again later.';
+          break;
+        case 'auth/network-request-failed':
+          errorMessage = 'Network error. Please check your connection and try again.';
+          break;
+        case 'permission-denied':
+        case 'auth/insufficient-permission':
+          errorMessage = 'Permission denied. You may not have access to this account.';
+          break;
+        case 'firestore/permission-denied':
+          errorMessage = 'Database access denied. Please contact support if this persists.';
+          break;
         default:
-          errorMessage = error.message;
+          errorMessage = error.message || 'Authentication failed. Please try again.';
       }
       
       setError(errorMessage);
@@ -139,7 +155,35 @@ const DualAuth = () => {
       setError('');
     } catch (error) {
       console.error('Error sending OTP:', error);
-      setError(error.message || 'Failed to send OTP. Please try again.');
+      
+      let errorMessage = 'Failed to send OTP. Please try again.';
+      
+      // Handle specific Firebase errors
+      switch (error.code) {
+        case 'auth/invalid-phone-number':
+          errorMessage = 'Invalid phone number format. Please check and try again.';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Too many requests. Please wait a moment and try again.';
+          break;
+        case 'auth/quota-exceeded':
+          errorMessage = 'SMS quota exceeded. Please try again later.';
+          break;
+        case 'auth/captcha-check-failed':
+          errorMessage = 'reCAPTCHA verification failed. Please refresh and try again.';
+          break;
+        case 'auth/network-request-failed':
+          errorMessage = 'Network error. Please check your connection and try again.';
+          break;
+        case 'permission-denied':
+        case 'auth/insufficient-permission':
+          errorMessage = 'Permission denied. Please ensure you have proper access.';
+          break;
+        default:
+          errorMessage = error.message || 'Failed to send OTP. Please try again.';
+      }
+      
+      setError(errorMessage);
       
       // Reset reCAPTCHA
       if (window.recaptchaVerifier) {
@@ -179,7 +223,32 @@ const DualAuth = () => {
       }
     } catch (error) {
       console.error('Error verifying OTP:', error);
-      setError('Invalid OTP. Please try again.');
+      
+      let errorMessage = 'Invalid OTP. Please try again.';
+      
+      // Handle specific Firebase errors
+      switch (error.code) {
+        case 'auth/invalid-verification-code':
+          errorMessage = 'Invalid verification code. Please check and try again.';
+          break;
+        case 'auth/code-expired':
+          errorMessage = 'Verification code has expired. Please request a new one.';
+          break;
+        case 'auth/missing-verification-code':
+          errorMessage = 'Please enter the verification code.';
+          break;
+        case 'permission-denied':
+        case 'auth/insufficient-permission':
+          errorMessage = 'Permission denied. Please ensure you have proper access.';
+          break;
+        case 'auth/network-request-failed':
+          errorMessage = 'Network error. Please check your connection and try again.';
+          break;
+        default:
+          errorMessage = error.message || 'Invalid OTP. Please try again.';
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -198,7 +267,7 @@ const DualAuth = () => {
     try {
       const user = auth.currentUser;
       if (!user) {
-        throw new Error('No user found');
+        throw new Error('No user found. Please sign in again.');
       }
 
       const userData = {
@@ -212,6 +281,8 @@ const DualAuth = () => {
         contacts: [],
         pendingRequests: [],
         deviceTokens: [],
+        isOnline: true,
+        lastSeen: new Date(),
         settings: {
           notifications: {
             messages: true,
@@ -254,7 +325,31 @@ const DualAuth = () => {
       
     } catch (error) {
       console.error('Error creating profile:', error);
-      setError('Failed to create profile. Please try again.');
+      
+      let errorMessage = 'Failed to create profile. Please try again.';
+      
+      // Handle specific Firebase errors
+      switch (error.code) {
+        case 'permission-denied':
+          errorMessage = 'Permission denied. You may not have access to create a profile.';
+          break;
+        case 'auth/insufficient-permission':
+          errorMessage = 'Insufficient permissions. Please check your account status.';
+          break;
+        case 'auth/network-request-failed':
+          errorMessage = 'Network error. Please check your connection and try again.';
+          break;
+        case 'firestore/permission-denied':
+          errorMessage = 'Database access denied. Please contact support if this persists.';
+          break;
+        case 'auth/user-disabled':
+          errorMessage = 'Your account has been disabled. Please contact support.';
+          break;
+        default:
+          errorMessage = error.message || 'Failed to create profile. Please try again.';
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
