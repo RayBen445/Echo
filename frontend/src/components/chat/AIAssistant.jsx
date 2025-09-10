@@ -1,16 +1,41 @@
 import React, { useState } from 'react';
 import { Sparkles, Send, Bot, User } from 'lucide-react';
 
+/**
+ * AI Assistant Component - Mock Implementation
+ * 
+ * This component provides a user interface for AI assistance in chats,
+ * currently using MOCK responses instead of real Google Gemini API calls.
+ * 
+ * CURRENT STATUS: MOCK IMPLEMENTATION
+ * - Displays "Powered by Google Gemini" but uses hardcoded responses
+ * - No actual API calls to Google Gemini
+ * - No @google/generative-ai dependency installed
+ * 
+ * TO IMPLEMENT REAL GOOGLE GEMINI INTEGRATION:
+ * 1. Install: npm install @google/generative-ai
+ * 2. Add API key to environment: VITE_GOOGLE_GEMINI_API_KEY
+ * 3. Replace callGeminiAPI function with real API implementation
+ * 4. Handle proper error states and rate limiting
+ */
+
 const AIAssistant = ({ onSendMessage, disabled = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversation, setConversation] = useState([]);
 
-  // Simulate Gemini AI API call (replace with actual implementation)
+  // MOCK Gemini AI API call - NOT a real implementation
+  // TODO: Replace with actual Google Gemini API integration
   const callGeminiAPI = async (prompt, context = []) => {
-    // This would be replaced with actual Google Gemini API integration
-    // For demo purposes, we'll return a mock response
+    // ⚠️  MOCK IMPLEMENTATION WARNING ⚠️
+    // This is NOT a real Google Gemini API call!
+    // This function returns hardcoded responses for demonstration purposes.
+    // 
+    // For real implementation:
+    // 1. Import: import { GoogleGenerativeAI } from '@google/generative-ai';
+    // 2. Initialize: const genAI = new GoogleGenerativeAI(process.env.VITE_GOOGLE_GEMINI_API_KEY);
+    // 3. Use actual API calls instead of mock responses below
     
     await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
     
@@ -45,7 +70,8 @@ const AIAssistant = ({ onSendMessage, disabled = false }) => {
     setIsLoading(true);
 
     try {
-      // Call Gemini AI API
+      // MOCK: Call simulated Gemini AI API (not real!)
+      // TODO: Replace with real Google Gemini API call
       const aiResponse = await callGeminiAPI(message, conversation);
       
       const assistantMessage = { role: 'assistant', content: aiResponse };
@@ -95,7 +121,7 @@ const AIAssistant = ({ onSendMessage, disabled = false }) => {
             </div>
             <div>
               <h3 className="font-semibold text-lg">AI Assistant</h3>
-              <p className="text-sm opacity-90">Powered by Google Gemini</p>
+              <p className="text-sm opacity-90">Mock Implementation - Not Real Gemini API</p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
