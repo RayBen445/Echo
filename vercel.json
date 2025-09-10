@@ -1,14 +1,9 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": "frontend/dist",
+  "installCommand": "npm run install-all",
+  "framework": "vite",
   "routes": [
     {
       "handle": "filesystem"
@@ -18,15 +13,6 @@
       "dest": "/index.html"
     }
   ],
-  "buildCommand": "npm run build",
-  "outputDirectory": "frontend/dist",
-  "installCommand": "npm run install-all",
-  "framework": "vite",
-  "functions": {
-    "functions/index.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "env": {
     "VITE_FIREBASE_API_KEY": "@firebase_api_key",
     "VITE_FIREBASE_AUTH_DOMAIN": "@firebase_auth_domain", 
