@@ -83,7 +83,8 @@ dist
 
 # Gatsby files
 .cache/
-public
+# Note: Allow frontend/public for static assets, only ignore root public
+/public
 
 # Storybook build outputs
 .out
