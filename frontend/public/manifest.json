@@ -1,0 +1,21 @@
+{
+  "name": "Echo - Firebase Social Messenger",
+  "short_name": "Echo",
+  "description": "A comprehensive social messenger platform with real-time chat, status updates, and social networking features powered by Firebase.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/echo-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["social", "communication"],
+  "lang": "en",
+  "dir": "ltr"
+}
