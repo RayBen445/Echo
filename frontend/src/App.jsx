@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import useAuthStore from './stores/mockAuthStore';
+import useAuthStore from './stores/authStore';
 import useChatStore from './stores/mockChatStore';
 import DualAuth from './components/auth/PhoneAuth';
 import Layout from './components/layout/Layout';
