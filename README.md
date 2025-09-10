@@ -17,6 +17,7 @@ Echo is a comprehensive social messenger platform that seamlessly blends WhatsAp
 - **Media Sharing**: Images, videos, and files with Firebase Cloud Storage
 - **Voice Messages**: Record and send audio messages
 - **Message Features**: Reply to messages, emoji reactions
+- **🤖 AI Assistant (Mock)**: Placeholder implementation for Google Gemini AI integration
 
 ### 📱 Social Networking Features  
 - **Status/Stories**: 24-hour temporary photo/text updates
@@ -71,6 +72,47 @@ frontend/
 │   └── manifest.json           # PWA manifest
 └── package.json
 ```
+
+## 🤖 AI Integration Status
+
+### Google Gemini AI - Mock Implementation
+
+Echo includes an AI Assistant component that displays "Powered by Google Gemini" but currently uses a **mock implementation** for demonstration purposes.
+
+**Current Status:**
+- ✅ UI Component: Fully functional AI assistant interface
+- ✅ Chat Integration: Accessible through chat interface
+- ❌ Real API: Mock responses instead of actual Google Gemini API calls
+- ❌ Dependencies: No `@google/generative-ai` package installed
+- ❌ Configuration: No API key setup for Google Gemini
+
+**Location:** `frontend/src/components/chat/AIAssistant.jsx`
+
+**To implement real Google Gemini integration:**
+
+1. **Install the Google Generative AI SDK:**
+   ```bash
+   cd frontend
+   npm install @google/generative-ai
+   ```
+
+2. **Get a Google Gemini API key:**
+   - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Create a new API key
+   - Add to your environment variables
+
+3. **Update environment configuration:**
+   ```bash
+   # Add to frontend/.env.local
+   VITE_GOOGLE_GEMINI_API_KEY=your_api_key_here
+   ```
+
+4. **Replace mock implementation:**
+   - Update the `callGeminiAPI` function in `AIAssistant.jsx`
+   - Import and configure the Google Generative AI SDK
+   - Handle API responses and errors appropriately
+
+**Note:** The current mock implementation provides realistic responses for development and testing purposes without requiring API costs.
 
 ## 🛠️ Setup & Development
 
@@ -164,6 +206,7 @@ In your Vercel dashboard, add these environment variables:
 - `VITE_FIREBASE_MESSAGING_SENDER_ID`
 - `VITE_FIREBASE_APP_ID`
 - `VITE_FIREBASE_VAPID_KEY`
+- `VITE_GOOGLE_GEMINI_API_KEY` (optional - for real AI integration)
 
 ### 5. Development
 ```bash
