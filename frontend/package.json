@@ -8,16 +8,25 @@
     "build": "vite build",
     "preview": "vite preview"
   },
-  "keywords": ["chat", "real-time", "react", "vite", "tailwind", "firebase", "social-messenger"],
+  "keywords": [
+    "chat",
+    "real-time",
+    "react",
+    "vite",
+    "tailwind",
+    "firebase",
+    "social-messenger"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "firebase": "^10.7.0",
+    "lucide-react": "^0.294.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.1",
-    "firebase": "^10.7.0",
-    "zustand": "^4.4.7",
-    "lucide-react": "^0.294.0"
+    "zustand": "^4.4.7"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",

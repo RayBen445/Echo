@@ -7,7 +7,7 @@ import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 import { getMessaging, isSupported } from 'firebase/messaging';
 
 // Firebase configuration (replace with your actual config)
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "demo-api-key",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "echo-messenger.firebaseapp.com",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "echo-messenger",

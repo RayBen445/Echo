@@ -1,23 +1,22 @@
 import React, { useState } from 'react';
 import { Sparkles, Send, Bot, User } from 'lucide-react';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 /**
- * AI Assistant Component - Mock Implementation
+ * AI Assistant Component
  * 
  * This component provides a user interface for AI assistance in chats,
- * currently using MOCK responses instead of real Google Gemini API calls.
- * 
- * CURRENT STATUS: MOCK IMPLEMENTATION
- * - Displays "Powered by Google Gemini" but uses hardcoded responses
- * - No actual API calls to Google Gemini
- * - No @google/generative-ai dependency installed
- * 
- * TO IMPLEMENT REAL GOOGLE GEMINI INTEGRATION:
- * 1. Install: npm install @google/generative-ai
- * 2. Add API key to environment: VITE_GOOGLE_GEMINI_API_KEY
- * 3. Replace callGeminiAPI function with real API implementation
- * 4. Handle proper error states and rate limiting
+ * powered by the Google Gemini API.
  */
+
+// Configure the Google Generative AI SDK
+const VITE_GOOGLE_GEMINI_API_KEY = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY;
+let genAI;
+if (VITE_GOOGLE_GEMINI_API_KEY) {
+  genAI = new GoogleGenerativeAI(VITE_GOOGLE_GEMINI_API_KEY);
+} else {
+  console.warn("Google Gemini API key not found. AI Assistant will be disabled.");
+}
 
 const AIAssistant = ({ onSendMessage, disabled = false }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,39 +24,28 @@ const AIAssistant = ({ onSendMessage, disabled = false }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [conversation, setConversation] = useState([]);
 
-  // MOCK Gemini AI API call - NOT a real implementation
-  // TODO: Replace with actual Google Gemini API integration
+  // Call the real Google Gemini API
   const callGeminiAPI = async (prompt, context = []) => {
-    // ⚠️  MOCK IMPLEMENTATION WARNING ⚠️
-    // This is NOT a real Google Gemini API call!
-    // This function returns hardcoded responses for demonstration purposes.
-    // 
-    // For real implementation:
-    // 1. Import: import { GoogleGenerativeAI } from '@google/generative-ai';
-    // 2. Initialize: const genAI = new GoogleGenerativeAI(process.env.VITE_GOOGLE_GEMINI_API_KEY);
-    // 3. Use actual API calls instead of mock responses below
-    
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
-    
-    // Mock AI responses based on prompt content
-    const responses = {
-      greeting: "Hello! I'm your Echo AI assistant. I can help you with messaging, finding information, or just having a conversation. What can I do for you today?",
-      help: "I can help you with various tasks:\n• Draft messages and replies\n• Translate text\n• Summarize conversations\n• Answer questions\n• Provide suggestions\n• Help with creative writing\n\nWhat would you like me to help you with?",
-      translate: "I can translate text between many languages. Just tell me what you'd like to translate and which language you want it in!",
-      default: `I understand you're asking about "${prompt}". While I'm still learning, I can help you draft a response, provide suggestions, or clarify information. How would you like me to assist you?`
-    };
-
-    const lowerPrompt = prompt.toLowerCase();
-    
-    if (lowerPrompt.includes('hello') || lowerPrompt.includes('hi') || lowerPrompt.includes('hey')) {
-      return responses.greeting;
-    } else if (lowerPrompt.includes('help') || lowerPrompt.includes('what can you do')) {
-      return responses.help;
-    } else if (lowerPrompt.includes('translate')) {
-      return responses.translate;
-    } else {
-      return responses.default;
+    if (!genAI) {
+      throw new Error("Gemini API not initialized. Check API key.");
     }
+    
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    
+    // Basic context handling (can be improved)
+    const history = context.map(msg => ({
+      role: msg.role,
+      parts: msg.content
+    }));
+
+    const chat = model.startChat({
+      history: history.slice(0, -1), // All but the last message
+    });
+
+    const result = await chat.sendMessage(prompt);
+    const response = await result.response;
+    const text = response.text();
+    return text;
   };
 
   const handleSendToAI = async () => {
@@ -70,8 +58,6 @@ const AIAssistant = ({ onSendMessage, disabled = false }) => {
     setIsLoading(true);
 
     try {
-      // MOCK: Call simulated Gemini AI API (not real!)
-      // TODO: Replace with real Google Gemini API call
       const aiResponse = await callGeminiAPI(message, conversation);
       
       const assistantMessage = { role: 'assistant', content: aiResponse };
@@ -121,7 +107,7 @@ const AIAssistant = ({ onSendMessage, disabled = false }) => {
             </div>
             <div>
               <h3 className="font-semibold text-lg">AI Assistant</h3>
-              <p className="text-sm opacity-90">Mock Implementation - Not Real Gemini API</p>
+              <p className="text-sm opacity-90">Powered by Google Gemini</p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
