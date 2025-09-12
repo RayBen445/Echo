@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { firebaseConfig } from './config/firebase';
 import useAuthStore from './stores/authStore';
 import useChatStore from './stores/chatStore';
 import DualAuth from './components/auth/PhoneAuth';
@@ -81,6 +82,21 @@ function App() {
       cleanup();
     };
   }, [initialize, cleanup]);
+
+  // Register service worker for push notifications
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      const queryString = new URLSearchParams(firebaseConfig).toString();
+      navigator.serviceWorker
+        .register(`/firebase-messaging-sw.js?${queryString}`)
+        .then((registration) => {
+          console.log('Service Worker registration successful, scope is:', registration.scope);
+        })
+        .catch((err) => {
+          console.log('Service Worker registration failed: ', err);
+        });
+    }
+  }, []);
 
   return (
     <Router>

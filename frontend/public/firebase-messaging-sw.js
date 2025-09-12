@@ -2,16 +2,17 @@
 import { initializeApp } from 'firebase/app';
 import { getMessaging, onBackgroundMessage } from 'firebase/messaging/sw';
 
-// Initialize Firebase app in service worker
+// Get the query parameters from the service worker's URL
+const urlParams = new URLSearchParams(location.search);
+
+// Create the config object by extracting the parameters
 const firebaseConfig = {
-  // These will be replaced with actual values from environment variables
-  // during the build process or at runtime
-  apiKey: self.FIREBASE_CONFIG?.apiKey || 'demo-key',
-  authDomain: self.FIREBASE_CONFIG?.authDomain || 'demo-project.firebaseapp.com',
-  projectId: self.FIREBASE_CONFIG?.projectId || 'demo-project',
-  storageBucket: self.FIREBASE_CONFIG?.storageBucket || 'demo-project.appspot.com',
-  messagingSenderId: self.FIREBASE_CONFIG?.messagingSenderId || '123456789',
-  appId: self.FIREBASE_CONFIG?.appId || '1:123456789:web:demo'
+  apiKey: urlParams.get('apiKey'),
+  authDomain: urlParams.get('authDomain'),
+  projectId: urlParams.get('projectId'),
+  storageBucket: urlParams.get('storageBucket'),
+  messagingSenderId: urlParams.get('messagingSenderId'),
+  appId: urlParams.get('appId'),
 };
 
 const app = initializeApp(firebaseConfig);
